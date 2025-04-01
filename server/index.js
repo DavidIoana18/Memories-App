@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
 import authRoutes from './routes/authRoutes.js';
+import './middleware/passport.js';
 
 dotenv.config(); // load environment variables from a .env file into process.env
 
