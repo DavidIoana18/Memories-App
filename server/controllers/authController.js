@@ -1,7 +1,6 @@
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import {createUser, findUserByEmail} from '../models/user.js';
-import  {tokenBlacklist} from '../middleware/tokenMiddleware.js';
 
 // register a user with email and password
 async function registerUser(req, res) {
@@ -81,18 +80,8 @@ async function googleCallback(req, res, next) {
 
 // logging out a user
 async function logoutUser(req, res){
-    try{
-        const authHeader = req.headers.authorization;
-
-        if(authHeader && authHeader.startsWith('Bearer ')){
-            const token = authHeader.split(' ')[1];         // get the token from the authorization header that is sent from the client
-           tokenBlacklist.add(token);                       // add the token to the blacklist
-        }
-        res.json({message: 'User logged out successfully!'}); 
-    }catch(err){
-        console.error('Error logging out: ', err);
-        res.status(500).json({message: 'Logout failed!'});
-    }
+   console.log('Logging out...');
+    res.json({message: 'User logged out successfully!'});  
 }
 
 // logging out a user from Google
@@ -100,6 +89,5 @@ async function logoutGoogle(req, res) {
     console.log('Logging out from Google...');
     res.json({ message: "Google logged out successfully" });
 };
-
 
 export {registerUser, loginUser, googleAuth, googleCallback, logoutUser, logoutGoogle};
