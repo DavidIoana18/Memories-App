@@ -1,0 +1,13 @@
+* {
+    user-select: none; 
+}
+
+body {
+    background-image: url("https://www.transparenttextures.com/patterns/gplay.png");
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    margin-top: 80px;
+    font-family: 'Arial', sans-serif;
+    background-color: #EEE7DA;
+}
