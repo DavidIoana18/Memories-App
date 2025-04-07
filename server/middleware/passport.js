@@ -10,18 +10,18 @@ passport.use("local", new LocalStrategy(
         try{
             const user = await findUserByEmail(email);
             if(user && user.auth_method === 'google'){  // if the user is found but registered with Google
-                return done(null, false, {message: 'This email is registred with Google. Please login using Google!'}); 
+                return done(null, false, { field: 'email', message: 'This email is registred with Google. Please login using Google!'}); 
             }
 
             if (!user) { // if the user is not found
-                return done(null, false, { message: 'No user found with this email!' });
+                return done(null, false, { field: 'email', message: 'No user found with this email!' });
             }
 
             const storedHashedPassword = user.password;
             const passwordsMatch = await comparePasswords(password, storedHashedPassword);
 
             if(!passwordsMatch){ // if the passwords don't match
-                return done(null, false, {message: 'Incorrect password!'}); 
+                return done(null, false, { field: 'password', message: 'Incorrect password!'}); 
             }
 
             return done(null, user); // if the user is found and the passwords match, return the user
@@ -51,7 +51,7 @@ passport.use("google", new GoogleStrategy(
             // if there is no user with a Google ID, check if there is an account with the same email but registered through another method
             const userByEmail = await findUserByEmail(profile.emails[0].value);
             if(userByEmail && userByEmail.auth_method !== 'google'){
-                return done(null, false, {message: "This email is already registered. Please login with your email!"});
+                return done(null, false, {field:'email', message: "This email is already registered. Please login with your email!"});
              }
 
              // if there is no user with this email, create a new one

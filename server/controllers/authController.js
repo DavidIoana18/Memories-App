@@ -8,7 +8,7 @@ async function registerUser(req, res) {
     try {
         const existingUser = await findUserByEmail(email);
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists!' });
+            return res.status(400).json({ field: 'email', message: 'User with this email already exists!' });
         }else{
             const user = {
                 firstName,
@@ -23,7 +23,7 @@ async function registerUser(req, res) {
         }
     } catch (err) {
         console.error("Error registering user: ", err);
-        res.status(500).json({ message: 'Server error!' });
+        res.status(500).json({message: 'Server error!' });
     }
 }
 
@@ -31,17 +31,21 @@ async function registerUser(req, res) {
 async function loginUser(req, res, next){
     passport.authenticate('local', {session: false}, (err, user, info) =>{
         if(err){ 
-            return res.status(500).json({message: 'Server error!'});
+            console.error("Error during authentication:", err);
+            return res.status(500).json({ message: 'Server error!'});
         }
         if(!user){
-            return res.status(401).json({message: info?.message || 'Authentication failed!'});  // ( ?. - optional chaining) info?.message -> if info is null or undefined, return undefined
+            return res.status(401).json({ 
+                field: info?.field || 'general',
+                message: info?.message || 'Authentication failed!'
+            });  // ( ?. - optional chaining) info?.message -> if info is null or undefined, return undefined
         }
-        console.error('User logged in: ', user);
+        // console.error('User logged in: ', user);
 
         const token = jwt.sign(
             {id: user.id},
             process.env.JWT_SECRET,
-            {expiresIn: '1h'}
+            {expiresIn: '1m'}
         );
         res.json({message: 'User logged in successfully!', user, token});
     })(req, res, next);
@@ -58,19 +62,19 @@ async function googleAuth(req, res, next){
 // Google callback after user grants permissions
 // Google oauth use GET method so we can't send the error messages in a JSON format, we have to send them as query parameters
 async function googleCallback(req, res, next) {
-    passport.authenticate('google', {session:false, failureRedirect: 'http://localhost:3000/auth/login'}, (err, user, info) =>{
+    passport.authenticate('google', {session:false, failureRedirect: 'http://localhost:3000/auth/register'}, (err, user, info) =>{
         if(err){
-            return res.redirect(`http://localhost:3000/auth/login?error=${encodeURIComponent(err)}`); // encode the error message because it may contain special characters
+            return res.redirect(`http://localhost:3000/auth/register?error=${encodeURIComponent(err)}`); // encode the error message because it may contain special characters
         }
         
         if(!user){
-            return res.redirect(`http://localhost:3000/auth/login?error=${encodeURIComponent(info?.message || 'Authentication failed')}`);
+            return res.redirect(`http://localhost:3000/auth/register?error=${encodeURIComponent(info?.message || 'Authentication failed')}`);
         }
         
         const token = jwt.sign(
             {id: user.id, authMethod: 'google'},
             process.env.JWT_SECRET,
-            {expiresIn: '1h'}
+            {expiresIn: '2m'}
         );
         // if the google authentication is successful, redirect the user to the memories page with the token
         res.redirect(`http://localhost:3000/memories?token=${token}`);
