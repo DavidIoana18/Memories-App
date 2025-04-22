@@ -40,7 +40,8 @@ function Navbar(){
         console.log('Auth Method:', localStorage.getItem("authMethod") || 'N/A');
     }, [location.search, location.pathname]);
 
-     async function handleLogout(){
+     async function handleLogout(event){
+        event.preventDefault();
         try{
             console.log('Logging out...');
             const authMethod = localStorage.getItem('authMethod');
@@ -99,7 +100,10 @@ function Navbar(){
                 {userStatus === "loggedIn" && (
                     <>
                     <Link to="/memories">Memories</Link>
-                    <button onClick={handleLogout}>Logout</button>
+                    <Link to="/" onClick={handleLogout} className="logout-link">
+                       Logout
+                    </Link>
+
                     </>
                 )}
              </div>
