@@ -6,6 +6,7 @@ import passport from 'passport';
 import authRoutes from './routes/authRoutes.js';
 import './middleware/passport.js';
 import memoryRoutes from './routes/memoryRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config(); // load environment variables from a .env file into process.env
 
@@ -20,6 +21,7 @@ app.use(passport.initialize()); // initialize the passport middleware
 
 app.use('/auth', authRoutes);
 app.use('/memories', memoryRoutes);
+app.use('/user', userRoutes);
 
 app.listen(port, ()=>{
     console.log(`Server is running on port ${port}`);
