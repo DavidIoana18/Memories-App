@@ -14,12 +14,23 @@ async function createMemoryHandler(req, res){
 }
 
 async function getAllMemoriesHandler(req, res){
-    const userId = req.user.id;
+    const userId = req.user.id; // get the userId from passport
     try{
         const memories = await getAllMemories(userId);
         res.status(200).json({message: 'Memories fetched successfully!', memories});
     }catch(err){
         console.error('Error getting memories: ', err);
+        res.status(500).json({message: err.message});
+    }
+}
+
+async function getAllMemoriesByUserIdHandler(req, res){
+    const {id} = req.params;
+    try{
+        const memories = await getAllMemories(id);
+        res.status(200).json({message: 'Memories fetched successfully!', memories});
+    }catch(err){
+        console.error('Error fetching user memories: ', err);
         res.status(500).json({message: err.message});
     }
 }
@@ -61,4 +72,4 @@ async function deleteMemoryHandler(req, res){
     }
 }
 
-export {createMemoryHandler, getAllMemoriesHandler, updateMemoryHandler, deleteMemoryHandler};
+export {createMemoryHandler, getAllMemoriesHandler, getAllMemoriesByUserIdHandler, updateMemoryHandler, deleteMemoryHandler};
