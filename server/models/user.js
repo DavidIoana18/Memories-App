@@ -111,16 +111,17 @@ async function updateUserProfile(userId, {bio, image_url}){
     const fields = [];
     const values = [];
     let index = 1;
-    if(bio){
+
+    if (bio !== undefined) { // null or string
         fields.push(`bio = $${index++}`);
-        values.push(bio);
+        values.push(bio); 
     }
 
-    if(image_url){
+    if (image_url !== undefined) {   // null or string
         fields.push(`image_url = $${index++}`);
         values.push(image_url);
     }
-
+    
     if(fields.length === 0) return;
 
     const query = ` UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
