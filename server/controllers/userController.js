@@ -29,14 +29,18 @@ async function getUserByIdHandler(req, res){
 
 async function updateUserProfileHandler(req, res){
     const userId = req.user.id;
-    const {bio, image_url} = req.body;
-
-    if(!bio && !image_url){
-        return res.status(400).json({message: 'No fields to update!'});
-    }
-
+    const updates = {};
+   
     try{
-        await updateUserProfile(userId, {bio, image_url});
+        if ('bio' in req.body) updates.bio = req.body.bio;
+        if ('image_url' in req.body) updates.image_url = req.body.image_url;
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ error: 'Nothing changed' });
+        }
+
+        await updateUserProfile(userId, updates);
+        
         res.status(200).json({message: 'Profile updated successfully!'});
     }catch(err){
         console.error('Error updating user profile: ', err);
