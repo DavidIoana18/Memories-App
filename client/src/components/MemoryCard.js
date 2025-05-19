@@ -13,7 +13,7 @@ import {
   import { format, formatDistanceToNow } from 'date-fns';
   import MemoryActions from './MemoryActions/MemoryActions.js';
 
-function MemoryCard( {memory, onEdit, onDelete} ){
+function MemoryCard( {memory, loggedInUserId, onEdit, onDelete} ){
 
     const [anchorEl, setAnchorEl] = useState(null); // for menu anchor element
     const open = Boolean(anchorEl);
@@ -41,6 +41,8 @@ function MemoryCard( {memory, onEdit, onDelete} ){
         // If more than 24 hours, show the full date (Day Month Year)
         timeAgo = format(createdAt, 'dd MMMM yyyy'); // Format the date to display full date
     }
+
+    const isOwner = loggedInUserId === memory.user_id;
 
     return(
     <Card 
@@ -122,52 +124,56 @@ function MemoryCard( {memory, onEdit, onDelete} ){
         </CardContent>
 
         {/* Menu Icon for Edit/Delete */}
-        <IconButton 
-            aria-label="more"
-            aria-controls="options-menu"
-            aria-haspopup="true"
-            onClick={handleMenuOpen}
-            sx={{
-                position: 'absolute',
-                top: 8, 
-                right: 8,
-                color: 'black', 
-                backgroundColor: '#ffffffab', 
-                '&:hover': {
-                    backgroundColor: '#e0e0e0', 
-                }, }}
-        >
-            <MoreVertIcon />
-        </IconButton>    
+        {isOwner && (
+            <>
+                <IconButton 
+                    aria-label="more"
+                    aria-controls="options-menu"
+                    aria-haspopup="true"
+                    onClick={handleMenuOpen}
+                    sx={{
+                        position: 'absolute',
+                        top: 8, 
+                        right: 8,
+                        color: 'black', 
+                        backgroundColor: '#ffffffab', 
+                        '&:hover': {
+                            backgroundColor: '#e0e0e0', 
+                        },
+                    }}
+                 >
+                    <MoreVertIcon />
+                </IconButton>    
 
-        <Menu
-            id="options-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleMenuClose}
-            
-        >
-            <MenuItem 
-                onClick={() =>{ 
-                    handleMenuClose();
-                     onEdit(memory); 
-                }}
-                sx={{ fontSize: '0.9rem' }}
-            >
-                Edit
-            </MenuItem>
-            <MenuItem 
-                onClick={() => { 
-                    handleMenuClose(); 
-                    onDelete(memory.id);
-                }}
-                sx={{ fontSize: '0.9rem' }}
-            >
-                Delete
-            </MenuItem>
-        </Menu>
+                <Menu
+                    id="options-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleMenuClose}
+                >
+                    <MenuItem 
+                        onClick={() =>{ 
+                            handleMenuClose();
+                            onEdit(memory); 
+                        }}
+                        sx={{ fontSize: '0.9rem' }}
+                    >
+                        Edit
+                    </MenuItem>
 
-
+                    <MenuItem 
+                        onClick={() => { 
+                            handleMenuClose(); 
+                            onDelete(memory.id);
+                        }}
+                        sx={{ fontSize: '0.9rem' }}
+                    >
+                        Delete
+                    </MenuItem>
+                </Menu>
+            </>
+        )}
+        
          <CardContent 
              sx={{ 
                 padding: '8px 16px 8px 16px',
@@ -179,15 +185,14 @@ function MemoryCard( {memory, onEdit, onDelete} ){
                     variant="caption"
                     color="primary"
                     sx={{
-                    display: '-webkit-box',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                    transition: 'all 0.3s ease',
-                    whiteSpace: 'normal',
-                    fontSize: '0.8rem',
-                    
+                        display: '-webkit-box',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        transition: 'all 0.3s ease',
+                        whiteSpace: 'normal',
+                        fontSize: '0.8rem',
                     }}
                 >
                     {memory.hashtag.split(' ').join(' ')}
