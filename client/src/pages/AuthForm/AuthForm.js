@@ -70,7 +70,8 @@ function AuthForm () {
            console.log('Token received: ',response.data.token);
             localStorage.setItem('token', response.data.token);
             localStorage.removeItem('registeredUser'); 
-            navigate('/memories');
+            const userId = response.data.user.id;
+            navigate(`/profile/${userId}`);
           }else if(!isRegistered){ // if the user is not registered
             localStorage.setItem('registeredUser', 'true');
             navigate('/auth/login');
