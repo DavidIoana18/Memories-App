@@ -130,4 +130,82 @@ async function updateUserProfile(userId, {bio, image_url}){
     await db.query(query, values);
 
 }
-export {createUser, findUserByEmail, findUserByGoogleId, findUserById, comparePasswords, deleteUser, getFollowersCount, getFollowingCount, getMemoriesCount, updateUserProfile};
+
+async function getFollowersList(userId, currentUserId){
+    try{
+        const result = await db.query(
+            `SELECT u.id, u.first_name, u.last_name, u.image_url,
+                EXISTS (
+                            SELECT 1 FROM followers f2
+                            WHERE f2.follower_id = $2 AND f2.following_id = u.id
+                        ) AS is_followed_by_current_user
+            FROM users u
+            INNER JOIN followers f ON f.follower_id = u.id
+            WHERE f.following_id = $1`,
+            [userId, currentUserId]
+        );
+        return result.rows;
+    }catch(err){
+        console.error('Error getting followers list: ', err);
+        throw new Error('Error getting followers list');
+    }
+}
+
+async function getFollowingList(userId, currentUserId){
+    try{
+        const result = await db.query(
+            `SELECT u.id, u.first_name, u.last_name, u.image_url,
+                EXISTS (
+                        SELECT 1 FROM followers f2
+                        WHERE f2.follower_id = $2 AND f2.following_id = u.id
+                    ) AS is_followed_by_current_user
+            FROM users u
+            INNER JOIN followers f ON f.following_id = u.id
+            WHERE f.follower_id = $1`,
+            [userId, currentUserId]
+        );
+        return result.rows;
+    }catch(err){
+        console.error('Error getting following list: ', err);
+        throw new Error('Error getting following list');
+    }
+}
+
+async function toggleFollow(userId, targetUserId) {
+    try {
+      const check = await db.query(
+        `SELECT * FROM followers WHERE follower_id = $1 AND following_id = $2`,
+        [userId, targetUserId]
+      );
+  
+      if (check.rows.length > 0) {// if already following
+        await db.query(
+          `DELETE FROM followers WHERE follower_id = $1 AND following_id = $2`,
+          [userId, targetUserId]
+        );
+        return { followed: false };
+      } else { // if not following
+        await db.query(
+          `INSERT INTO followers (follower_id, following_id) VALUES ($1, $2)`,
+          [userId, targetUserId]
+        );
+        return { followed: true };
+      }
+    } catch (err) {
+      throw new Error('Database error in toggleFollow');
+    }
+  }
+  
+  async function checkIfUserFollows(followerId, followedId){
+    try{
+        const result = await db.query(
+            `SELECT 1 FROM followers WHERE follower_id = $1 AND following_id = $2 LIMIT 1`,
+            [followerId, followedId]
+        );
+        return result.rows.length > 0;
+    }catch(err){
+        console.error('Error checking if user follows: ', err);
+        throw new Error('Error checking if user follows');
+    }
+  }
+export {createUser, findUserByEmail, findUserByGoogleId, findUserById, comparePasswords, deleteUser, getFollowersCount, getFollowingCount, getMemoriesCount, updateUserProfile, getFollowingList, getFollowersList, toggleFollow, checkIfUserFollows};
