@@ -4,9 +4,15 @@ import {Link, useNavigate, useLocation} from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
 import './Navbar.css';
 import logo from '../../assets/logo.png'; 
-
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { Tooltip } from '@mui/material';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import LoginIcon from '@mui/icons-material/Login';
 
 function Navbar(){
+    const [userId, setUserId] = useState(null);
     const [userStatus, setUserStatus] = useState('guest'); // guset, registered, loggedIn
     const navigate = useNavigate(); // hook for navigation
     const location = useLocation(); // obtain the current location of the app
@@ -22,7 +28,9 @@ function Navbar(){
             localStorage.setItem('token', token);
             const decodedToken = jwtDecode(token);
             localStorage.setItem('authMethod', decodedToken.authMethod || 'local');
-
+            
+            // console.log('Decoded Token:', decodedToken);
+            setUserId(decodedToken.id);
             setUserStatus('loggedIn');
     
             // if the token is in the URL from Google authentication, remove it from the URL
@@ -81,27 +89,50 @@ function Navbar(){
             <div className="nav-links">
 
            
-                <Link to="/">Home</Link>
+                <Link to="/">
+                    <Tooltip title="Home">
+                        <HomeIcon />
+                    </Tooltip>
+                </Link>
 
                 { /* Display the Register and Login links only if the user is a guest */}
                 {userStatus === "guest" &&  location.pathname !== "/auth/login"  &&  location.pathname !== "/auth/register"  &&(
                     <>
-                    <Link to="/auth/register">Register</Link>
-                    <Link to="/auth/login">Login</Link>
+                    <Link to="/auth/register">
+                        <Tooltip title="Register">
+                            <HowToRegIcon />
+                        </Tooltip>
+                    </Link>
+                    <Link to="/auth/login">
+                        <Tooltip title="Login">
+                            <LoginIcon />
+                        </Tooltip> 
+                    </Link>
                     </>
                 )}
 
                 {/* Display the Login link only if the user is registered */}
                 {userStatus === "registered" && location.pathname !== "/auth/login" && (
-                    <Link to="/auth/login">Login</Link>
+                    <Link to="/auth/login">
+                        <Tooltip title="Login">
+                            <LoginIcon />
+                        </Tooltip> 
+                    </Link>
                 )}
 
                 {/* Display the Memories and Logout links only if the user is logged in */}
                 {userStatus === "loggedIn" && (
                     <>
-                    <Link to="/memories">Memories</Link>
+                    {userId && <Link to={`/profile/${userId}`}>
+                        <Tooltip title="Profile">
+                            <PersonOutlineIcon />
+                        </Tooltip>
+                    </Link>}
+
                     <Link to="/" onClick={handleLogout} className="logout-link">
-                       Logout
+                        <Tooltip title="Logout">
+                            <LogoutIcon />
+                        </Tooltip>
                     </Link>
 
                     </>
