@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/axiosConfig.js'; // import the axios instance
 import {Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import {Grid, Fab} from '@mui/material';
+import {Grid, Fab, Tooltip} from '@mui/material';
 import MemoryCard from './MemoryCard.js';
 import FormInputMUI from './FormInputMUI.js'
 import Button from './Button/Buton.js';
 import AddIcon from '@mui/icons-material/Add';
 import { useParams } from 'react-router-dom';
+import { getLoggedInUserId } from '../utils/authUtils.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUtils.js';
 
-function Memories() {
+function Memories({onMemoryChange}) {
     const {userId} = useParams(); // get the userId from the URL
     const [memories, setMemories] = useState([]); // store the list of memories
     const [loading, setLoading] = useState(true); // indicate if the data is loading from the server
@@ -16,6 +18,11 @@ function Memories() {
     const [editingMemory, setEditingMemory] = useState(null); // store the memory that is being edited by the user
     const [showForm, setShowForm] = useState(false); // show or hide the form for adding/editting a new memory
     const [inputFormError, setinputFormError] = useState({});
+    const [uploading, setUploading] = useState(false); // indicate if the image is being uploaded to Cloudinary
+    const titleMaxLength = 35;
+
+    const loggedInUserId = getLoggedInUserId(); // get the logged in user id
+    const isOwnProfile = loggedInUserId === parseInt(userId); // check if the user is viewing his own profile
 
     const [newMemory, setNewMemory] = useState({
         title: '',
@@ -23,40 +30,36 @@ function Memories() {
         hashtag: '',
         imageUrl: ''
     }); // store the new memory data
-  
-    useEffect(() => { // Fetch memories when the component mounts
-        fetchMemories();
-    }, [userId]); // Fetch memories when the userId changes
 
-    async function fetchMemories() {
+    const fetchMemories = useCallback(async () =>{ // use useCallback to avoid infinite loop in useEffect
         setLoading(true);
         setError(null);
 
         try {
-            let response;
-            if(userId){
-                response = await api.get(`/memories/user/${userId}`); // Fetch other user memories
-            }else{
-                response = await api.get('/memories'); // Fetch own memories
-            }
+           const response = await api.get(`/memories/user/${userId}`); // Fetch other user memories
             setMemories(response.data.memories);  // Set the memories state with the response data
         } catch (err) {
             setError('Failed to load memories: ' + err.message);
         } finally {
             setLoading(false);
         }
-    }
+    }, [userId]); // Fetch memories when the userId changes
+
+    useEffect(() => { // Fetch memories when the component mounts
+        fetchMemories();
+    }, [userId, fetchMemories]); // Fetch memories when the userId changes
 
     async function handleAddMemory() {
         if (!handleValidation(newMemory))  return;
         
         try {
-            console.log('New memory before sending to API:', newMemory);
+            // console.log('New memory before sending to API:', newMemory);
             const response = await api.post('/memories', newMemory);
-            console.log('Server Response: ', response);
-            setMemories([...memories, response.data.memory]); // Add new memory to the list
+            // console.log('Server Response: ', response);
+            setMemories([response.data.memory, ...memories]); // Add new memory to the list
             //setNewMemory({ title: '', description: '', hashtag: '', image_url: '' }); // Clear form
             setShowForm(false);
+            onMemoryChange(); // Call the parent function to update the memory count
         } catch (err) {
             setError('Failed to add memory: ' + err.message);
         }
@@ -79,6 +82,7 @@ function Memories() {
         try {
             await api.delete(`/memories/${id}`);
             setMemories(memories.filter((memory) => memory.id !== id)); // Remove deleted memory from list
+            onMemoryChange(); // Call the parent function to update the memory count
         } catch (err) {
             setError('Failed to delete memory: ' + err.message);
         }
@@ -96,6 +100,7 @@ function Memories() {
     function handleInputChange(event) { // Handle input changes in the form
         const { name, value } = event.target;
         
+        if(name === 'title' && value.length > titleMaxLength) return;
         if (name === 'hashtag') {
            const newHashtags = value.trim().split(' ');
 
@@ -160,20 +165,10 @@ function Memories() {
         return Object.keys(formErrors).length === 0; // if there are no errors return true
     }
 
-    async function handleCloudinaryUpload(file) {
-            
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', 'unsigned_memories'); 
-    
+    async function handleCloudinaryUpload(file) {  
+        setUploading(true); // Set uploading to true when starting the upload
         try {
-            const res = await fetch('https://api.cloudinary.com/v1_1/dki5xequi/image/upload', {
-                method: 'POST',
-                body: formData
-            });
-    
-            const data = await res.json();
-            const imageUrl = data.secure_url;
+            const imageUrl = await uploadToCloudinary(file, 'unsigned_memories');
     
             if (editingMemory) {
                 setEditingMemory(prev => ({ ...prev, imageUrl: imageUrl }));
@@ -184,35 +179,40 @@ function Memories() {
         } catch (err) {
             console.error('Eroare upload Cloudinary:', err);
             setError('Upload failed. Please try again.');
+        }finally{
+            setUploading(false); // Set uploading to false when the upload is done
         }
     }
     
-    if (loading) return <p style={{ marginLeft: '30px' }}>Loading memories...</p>;
-    //  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+    if (loading) return <p style={{ marginLeft: '30px', fontStyle: 'italic', fontWeight: 'bold' }}>Loading memories...</p>;
+     if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
     return (
         <div style={{ padding: '5px' }}>
+            {isOwnProfile && (
+                <Tooltip title='Add new memory' arrow>
+                    <Fab
+                        color="primary"
+                        aria-label="add"
+                        onClick={handleEditAddButton}
+                        sx={{ 
+                            position: 'fixed', 
+                            bottom: 80, right: 16,
+                            backgroundColor: '#88AB8E', 
+                            '&:hover': {
+                                backgroundColor: '#AFC8AD', 
+                            },
+                            color: '#fff',
+                        }}
+                    >
+                        <AddIcon />
+                    </Fab>
+            </Tooltip>
+            )}
 
-            {/* <h2>Memories</h2> */}
-            <Fab
-                color="primary"
-                aria-label="add"
-                onClick={handleEditAddButton}
-                sx={{ 
-                    position: 'fixed', 
-                    bottom: 80, right: 16,
-                    backgroundColor: '#88AB8E', 
-                    '&:hover': {
-                        backgroundColor: '#AFC8AD', 
-                    },
-                    color: '#fff',
-                 }}
-            >
-                <AddIcon />
-            </Fab>
-
+            {/* Form for adding/editing a memory */}
             <Dialog open={showForm} onClose={cancelEditing} fullWidth maxWidth="sm">
-                <DialogTitle>{editingMemory ? 'Edit Memory' : 'Add Memory'}</DialogTitle>
+                <DialogTitle sx={{ fontStyle: 'italic', fontWeight: 'bold' }}>{editingMemory ? 'Edit your memory' : 'Add new memory'}</DialogTitle>
                 <DialogContent dividers>
                     <FormInputMUI
                         type="text"
@@ -223,8 +223,9 @@ function Memories() {
                         required={true}
                         error={!!inputFormError.title}
                         helperText={inputFormError.title}
+                        maxLength={titleMaxLength} // Set the max length for the title input
                     />
-
+                 
                     <FormInputMUI
                         type="text"
                         name="description"
@@ -263,18 +264,24 @@ function Memories() {
                     )}
                    
 
-                    {(editingMemory?.imageUrl || newMemory.imageUrl) && (
-                        <img
-                            src={editingMemory?.imageUrl || newMemory.imageUrl}
-                            alt="Preview"
-                            style={{ width: '50%', marginTop: 10, borderRadius: 4 }}
-                        />
+                    {uploading ? (
+                             <p style={{ fontStyle: 'italic', fontWeight: 'bold', marginTop: 10 }}>Uploading...</p>
+                    ) : (
+                        (!editingMemory && newMemory.imageUrl) && (
+                            
+                                <img
+                                    src={editingMemory?.imageUrl || newMemory.imageUrl}
+                                    alt="Preview"
+                                    style={{ width: '50%', marginTop: 10, borderRadius: 4 }}
+                                />
+                            
+                        )
                     )}
                 </DialogContent>
 
                 <DialogActions>
                     {editingMemory ? (
-                            <Button onClick={handleEditMemory}>Save Changes</Button>
+                            <Button onClick={handleEditMemory}>Save</Button>
                         ) : (
                             <Button onClick={handleAddMemory}>Add</Button>
                         )}
@@ -286,8 +293,9 @@ function Memories() {
 
             {/*Display memories using MmeoryCard component*/}
             {memories.length === 0 ? (
-                <p>No memories found. Try creating one!</p>
-            ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                        <p style={{ fontSize: '25px', fontStyle: 'italic', fontWeight: 'bold' }}>Oops! No memories here... Time to make some unforgettable ones!</p>
+                </div>            ) : (
                 <Grid 
                     container 
                     spacing={2}
@@ -303,6 +311,7 @@ function Memories() {
                         <Grid  key={memory.id} size={{xs: 12, sm: 6, md: 3}}>
                             <MemoryCard
                                 memory={memory}
+                                loggedInUserId = {loggedInUserId}
                                 onEdit={startEditing}
                                 onDelete={handleDeleteMemory}
                             />
