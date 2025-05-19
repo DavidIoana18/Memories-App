@@ -45,7 +45,7 @@ async function loginUser(req, res, next){
         const token = jwt.sign(
             {id: user.id},
             process.env.JWT_SECRET,
-            {expiresIn: '1m'}
+            {expiresIn: '3h'}
         );
         res.json({message: 'User logged in successfully!', user, token});
     })(req, res, next);
@@ -74,10 +74,10 @@ async function googleCallback(req, res, next) {
         const token = jwt.sign(
             {id: user.id, authMethod: 'google'},
             process.env.JWT_SECRET,
-            {expiresIn: '2m'}
+            {expiresIn: '3h'}
         );
         // if the google authentication is successful, redirect the user to the memories page with the token
-        res.redirect(`http://localhost:3000/memories?token=${token}`);
+        res.redirect(`http://localhost:3000/profile/${user.id}?token=${token}`);
         
     })(req, res, next);
 }
