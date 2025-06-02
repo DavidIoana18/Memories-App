@@ -63,6 +63,8 @@ Building this application involved creating a full-stack solution with user auth
    - Memories can be edited or deleted directly from the profile.
    - Users can update their bio and profile picture.
    - Users can delete their account if they wish.
+ #    
+© 2025 David Ioana. All rights reserved.
 
 # Demo
   ![FlashBaacks](https://github.com/DavidIoana18/Memories-App/blob/main/Demo/FlashBacks-%20DEMO.gif)
