@@ -18,16 +18,7 @@ function SessionHandler() {
     const handleSessionExpired = (e) => {
       const message = e.detail?.message || 'Your session has expired. You will be redirected to login.';
       
-      toast.error(message, {
-        position: "top-center",
-        autoClose: 9000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+      toast.error(message);
 
       setTimeout(() => {
         navigate('/auth/login');
@@ -47,7 +38,24 @@ function SessionHandler() {
 function App() {
     return (
     <>
-      <ToastContainer />
+      <ToastContainer 
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        containerStyle={{
+          position: 'fixed',
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+        }}
+      />
         <Router>        {/* wrap the app in a Router component to enable navigation */}
           <SessionHandler /> {/* handle session expiration */}
               <Navbar />            
