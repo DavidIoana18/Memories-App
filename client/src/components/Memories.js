@@ -159,7 +159,7 @@ function Memories({onMemoryChange}) {
         const formErrors = {};
         if (!memoryData.title) formErrors.title = 'Title is required!';
         if (!memoryData.description) formErrors.description = 'Description is required!';
-        if (!memoryData.imageUrl) formErrors.imageUrl = 'Image is required!';
+        if (!editingMemory && !memoryData.imageUrl) formErrors.imageUrl = 'Image is required!';
     
         setinputFormError(formErrors);
         return Object.keys(formErrors).length === 0; // if there are no errors return true
