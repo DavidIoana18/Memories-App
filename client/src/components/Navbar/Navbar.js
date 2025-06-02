@@ -88,13 +88,20 @@ function Navbar(){
 
             <div className="nav-links">
 
-           
-                <Link to="/">
-                    <Tooltip title="Home">
-                        <HomeIcon />
-                    </Tooltip>
-                </Link>
-
+                {userStatus === "guest" ? (
+                        <Link to="/">
+                            <Tooltip title="Home">
+                                <HomeIcon />
+                            </Tooltip>
+                        </Link>
+                ) : (
+                        <Link to="/feed">
+                            <Tooltip title="Feed">
+                                <HomeIcon />
+                            </Tooltip>
+                        </Link>
+                )}
+                
                 { /* Display the Register and Login links only if the user is a guest */}
                 {userStatus === "guest" &&  location.pathname !== "/auth/login"  &&  location.pathname !== "/auth/register"  &&(
                     <>
