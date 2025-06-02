@@ -26,4 +26,17 @@ async function getComments(memoryId){
     return result.rows;
 }
 
-export {addComment, getComments};
+async function getCommentsCount(memoryId){
+    try{
+        const result = await db.query(
+            'SELECT COUNT(*) FROM memory_comments WHERE memory_id = $1',
+            [memoryId]
+        );
+        return result.rows[0].count;
+    }catch(err){
+        console.error('Error getting comments count: ', err);
+        throw new Error('Error getting comments count');
+    }
+}
+
+export {addComment, getComments, getCommentsCount};

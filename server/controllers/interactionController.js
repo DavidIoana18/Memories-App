@@ -1,5 +1,5 @@
 import {toggleLike, getLikesCount, hasUserLiked, getUsersWhoLiked} from '../models/memoryLike.js';
-import {addComment, getComments} from '../models/memoryComment.js';
+import {addComment, getComments, getCommentsCount} from '../models/memoryComment.js';
 
 async function toggleLikeHandler(req, res){
     const userId = req.user.id; // get the userId from passport
@@ -84,4 +84,16 @@ async function getCommentsHandler(req, res){
     }
 }
 
-export {toggleLikeHandler, getLikesCountHandler, hasUserLikedHandler, getUsersWhoLikedHandler, addCommentHandler, getCommentsHandler, getUsersWhoCommentedHandler};
+async function getCommentsCountHandler(req, res){
+    const {memoryId} = req.params;
+
+    try{
+        const count = await getCommentsCount(memoryId);
+        res.status(200).json({message: 'Comments count fetched successfully!', count});
+    }catch(err){
+        console.error('Error getting comments count: ', err);
+        res.status(500).json({message: err.message});
+    }
+}
+
+export {toggleLikeHandler, getLikesCountHandler, hasUserLikedHandler, getUsersWhoLikedHandler, addCommentHandler, getCommentsHandler, getUsersWhoCommentedHandler, getCommentsCountHandler};
