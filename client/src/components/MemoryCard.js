@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import { Link } from 'react-router-dom';
 import {
     Card,
     CardContent,
@@ -6,15 +7,16 @@ import {
     Typography,
     IconButton, 
     Menu,
-    MenuItem
+    MenuItem,
+    Avatar
   } from '@mui/material';
   import Box from '@mui/material/Box';
   import MoreVertIcon from '@mui/icons-material/MoreVert';
   import { format, formatDistanceToNow } from 'date-fns';
-  import MemoryActions from './MemoryActions/MemoryActions.js';
+  import MemoryActions from './MemoryActions.js';
 
-function MemoryCard( {memory, loggedInUserId, onEdit, onDelete} ){
-
+function MemoryCard( {memory, loggedInUserId, onEdit, onDelete, onInteraction, showUserInfo} ){
+    
     const [anchorEl, setAnchorEl] = useState(null); // for menu anchor element
     const open = Boolean(anchorEl);
 
@@ -67,6 +69,40 @@ function MemoryCard( {memory, loggedInUserId, onEdit, onDelete} ){
             },
         }}
     >
+        {showUserInfo && ( // Show user info only if the post is on the feed
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '8px 16px',
+                
+                }}
+            >
+
+                <Avatar 
+                    src={memory.user_image} 
+                    sx={{ width: 40, height: 40 }} 
+                    alt={`${memory.first_name} ${memory.last_name}`}
+                />
+
+                <Typography 
+                    component={Link}
+                    to={`/profile/${memory.user_id}`}
+                    variant="subtitle1" 
+                    sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.9rem',
+                        color: '#333',
+                        textDecoration: 'none',
+                        marginLeft: 2,
+                    }}
+                >
+                    {memory.first_name} {memory.last_name}
+                </Typography>
+
+            </Box>
+        )}
+
         {memory.image_url && (
             <CardMedia
                 component="img"
@@ -217,7 +253,7 @@ function MemoryCard( {memory, loggedInUserId, onEdit, onDelete} ){
                 {memory.description}
             </Typography>
 
-                <MemoryActions memoryId={memory.id} />
+                <MemoryActions memoryId={memory.id} onInteraction={onInteraction} />
          </CardContent>
     </Card>    
     );
