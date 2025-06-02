@@ -159,7 +159,7 @@ function Memories({onMemoryChange}) {
         const formErrors = {};
         if (!memoryData.title) formErrors.title = 'Title is required!';
         if (!memoryData.description) formErrors.description = 'Description is required!';
-        // if (!memoryData.image_url) formErrors.image_url = 'Image URL is required!';
+        if (!memoryData.imageUrl) formErrors.imageUrl = 'Image is required!';
     
         setinputFormError(formErrors);
         return Object.keys(formErrors).length === 0; // if there are no errors return true
@@ -250,17 +250,25 @@ function Memories({onMemoryChange}) {
                     />
 
                     {!editingMemory && ( 
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>{
-                                const file = e.target.files[0];
-                                if(file){
-                                    handleCloudinaryUpload(file);
-                                }
-                            }}
-                            style={{ marginTop: 16 }}
-                        />   
+                        <> 
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>{
+                                    const file = e.target.files[0];
+                                    if(file){
+                                        handleCloudinaryUpload(file);
+                                    }
+                                }}
+                                style={{ marginTop: 16 }}
+                            />   
+                        
+                            {inputFormError.imageUrl && ( // image error message
+                                <p style={{ color: 'red', fontSize: '14px', marginTop: '5px' }}>
+                                    {inputFormError.imageUrl}
+                                </p>
+                            )}
+                        </>
                     )}
                    
 
