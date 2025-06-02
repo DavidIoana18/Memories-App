@@ -8,11 +8,11 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import InputAdornment from '@mui/material/InputAdornment';
-import api from '../../utils/axiosConfig.js';
+import api from '../utils/axiosConfig.js';
 import { format, formatDistanceToNow } from 'date-fns';
 import {Link} from 'react-router-dom';
 
-function MemoryActions( { memoryId} ){
+function MemoryActions( { memoryId, onInteraction} ){
     const [usersWhoLiked, setUsersWhoLiked] = useState([]);
     const [likesCount, setLikesCount] = useState(0); 
     const [likesOpen, setLikesOpen] = useState(false);
@@ -21,6 +21,16 @@ function MemoryActions( { memoryId} ){
     const [comments, setComments] = useState([]);
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [newComment, setNewComment] = useState('');
+    const [commentsCount, setCommentsCount] = useState(0); 
+
+    const fetchCommentsCount = useCallback(async () =>{
+        try {
+            const response = await api.get(`/memories/${memoryId}/comments-count`);
+            setCommentsCount(response.data.count);
+        } catch (err) {
+            console.error('Error fetching comments count: ', err);
+        }
+    }, [memoryId]);
 
     const fetchLikesCount = useCallback(async () => {
         try {
@@ -53,7 +63,8 @@ function MemoryActions( { memoryId} ){
         fetchLikesCount();
         fetchComments();
         fetchHasUserLiked();
-    }, [memoryId, fetchLikesCount, fetchComments, fetchHasUserLiked]); // fetch likes count and comments when the component mounts or memoryId changes
+        fetchCommentsCount();
+    }, [memoryId, fetchLikesCount, fetchComments, fetchHasUserLiked, fetchCommentsCount]); // fetch likes count and comments when the component mounts or memoryId changes
 
     async function fetchUsersWhoLiked(){
         try{
@@ -67,9 +78,13 @@ function MemoryActions( { memoryId} ){
     async function toggleLike(){
         try{
             const response = await api.post(`/memories/${memoryId}/like`);
-            setUserHasLiked(response.data.liked);
+            setUserHasLiked(response.data.liked); // toggle the like state
+            const updatedLikesCount = response.data.liked ? likesCount + 1 : likesCount - 1;
+            
             fetchLikesCount();
             fetchUsersWhoLiked();
+
+            if (onInteraction) onInteraction({id: memoryId, likesCount: updatedLikesCount}); // update the likes count in the parent component (for you feed)
         }catch(err){
             console.error('Error toggling like: ', err);
         }
@@ -82,8 +97,13 @@ function MemoryActions( { memoryId} ){
                 content: newComment
             });
             setComments([...comments, response.data.comment]);
+            const updatedCommentsCount = commentsCount + 1;
+
             setNewComment('');
             fetchComments();
+            setCommentsCount((prevCount) => Number(prevCount) + 1);
+
+            if (onInteraction) onInteraction({ id: memoryId, commentsCount: updatedCommentsCount }); // update the comments count in the parent component (for you feed)
         }catch(err){
             console.error('Error adding comment: ', err);
         }
@@ -167,7 +187,7 @@ function MemoryActions( { memoryId} ){
                     /> 
                 </IconButton>
                 
-                <Typography variant="caption" sx={{ ml: 0.5 }}>{comments.length}</Typography>
+                <Typography variant="caption" sx={{ ml: 0.5 }}>{commentsCount}</Typography>
                
             </Tooltip>
 
