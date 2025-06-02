@@ -82,4 +82,59 @@ async function deleteMemory(memoryId, userId){
     }
 }
 
-export {createMemory, getAllMemories, updateMemory, deleteMemory};
+async function getExploreMemories(userId) {
+    try {
+        const memoriesQuery = `
+            SELECT m.id, m.title, m.description, m.hashtag, m.image_url, m.created_at,
+                   u.id AS user_id, u.first_name, u.last_name, u.image_url AS user_image,
+                   (SELECT COUNT(*) FROM memory_likes WHERE memory_id = m.id) AS like_count,  -- Count the number of likes for the memory
+                   (SELECT COUNT(*) FROM memory_comments WHERE memory_id = m.id) AS comment_count, -- Count the number of comments for the memory and alias it as "comment_count"
+                   EXISTS ( 
+                       SELECT 1 FROM memory_likes WHERE memory_id = m.id AND user_id = $1
+                   ) AS has_liked
+                    -- Check if the current user (identified by $1) has liked the memory, returning true or false as "has_liked".
+            FROM memories m
+            JOIN users u ON m.user_id = u.id
+            WHERE u.id NOT IN (
+                SELECT f.following_id
+                FROM followers f
+                WHERE f.follower_id = $1
+            )
+            -- Exclude memories created by users that the current user (identified by $1) is following
+            AND u.id != $1
+            -- Exclude memories created by the current user themselves.
+            ORDER BY m.created_at DESC
+        `;
+        const result = await db.query(memoriesQuery, [userId]);
+        return result.rows;
+    } catch (err) {
+        console.error('Error getting explore memories: ', err);
+        throw new Error('Error getting explore memories');
+    }
+}
+
+async function getForYouMemories(userId) {
+    try {
+        const memoriesQuery = `
+            SELECT m.id, m.title, m.description, m.hashtag, m.image_url, m.created_at,
+                   u.id AS user_id, u.first_name, u.last_name, u.image_url AS user_image,
+                   (SELECT COUNT(*) FROM memory_likes WHERE memory_id = m.id) AS like_count,
+                   (SELECT COUNT(*) FROM memory_comments WHERE memory_id = m.id) AS comment_count,
+                   EXISTS (
+                       SELECT 1 FROM memory_likes WHERE memory_id = m.id AND user_id = $1
+                   ) AS has_liked
+            FROM memories m
+            JOIN users u ON m.user_id = u.id
+            JOIN followers f ON f.following_id = m.user_id
+            WHERE f.follower_id = $1
+            ORDER BY m.created_at DESC
+        `;
+        const result = await db.query(memoriesQuery, [userId]);
+        return result.rows;
+    } catch (err) {
+        console.error('Error getting for you memories: ', err);
+        throw new Error('Error getting for you memories');
+    }
+}
+
+export {createMemory, getAllMemories, updateMemory, deleteMemory, getExploreMemories, getForYouMemories};

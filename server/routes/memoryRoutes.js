@@ -1,7 +1,7 @@
-import{createMemoryHandler, getAllMemoriesHandler, getAllMemoriesByUserIdHandler, updateMemoryHandler, deleteMemoryHandler} from '../controllers/memoryController.js';
+import{createMemoryHandler, getAllMemoriesHandler, getAllMemoriesByUserIdHandler, updateMemoryHandler, deleteMemoryHandler, getExploreMemoriesHandler, getForYouMemoriesHandler} from '../controllers/memoryController.js';
 import {
     toggleLikeHandler, getLikesCountHandler, hasUserLikedHandler, getUsersWhoLikedHandler, 
-    addCommentHandler, getCommentsHandler
+    addCommentHandler, getCommentsHandler, getCommentsCountHandler
 } from '../controllers/interactionController.js';
 import express from 'express';
 import authenticateUser from '../middleware/authenticateUser.js';
@@ -22,5 +22,9 @@ router.get('/:memoryId/likes/users', getUsersWhoLikedHandler);            // ret
 
 router.post('/:memoryId/comment', authenticateUser, addCommentHandler);   // adds a comment to a memory
 router.get('/:memoryId/comments', getCommentsHandler);                    // returns all comments on a memory
+router.get('/:memoryId/comments-count', getCommentsCountHandler);         // returns the users who commented on a memory
+
+router.get('/feed/explore', authenticateUser, getExploreMemoriesHandler); // gets memories posted by users the logged-in user doesn’t follow
+router.get('/feed/for-you', authenticateUser, getForYouMemoriesHandler);  // gets memories posted by users the logged-in user follows
 
 export default router;

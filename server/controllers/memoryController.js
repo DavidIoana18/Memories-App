@@ -1,4 +1,4 @@
-import {createMemory, getAllMemories, updateMemory, deleteMemory} from '../models/memory.js';
+import {createMemory, getAllMemories, updateMemory, deleteMemory, getExploreMemories, getForYouMemories} from '../models/memory.js';
 
 async function createMemoryHandler(req, res){
     const {title, description, hashtag, imageUrl} = req.body;
@@ -72,4 +72,27 @@ async function deleteMemoryHandler(req, res){
     }
 }
 
-export {createMemoryHandler, getAllMemoriesHandler, getAllMemoriesByUserIdHandler, updateMemoryHandler, deleteMemoryHandler};
+async function getExploreMemoriesHandler(req, res){
+    const userId = req.user.id;
+    try{
+        const memories = await getExploreMemories(userId);
+        res.status(200).json({memories});
+    }catch(err){
+        console.error('Error getting explore memories: ', err);
+        res.status(500).json({message: err.message});
+    }
+}
+
+async function getForYouMemoriesHandler(req, res){
+    const userId = req.user.id;
+    // console.log('userId in getForYouMemoriesHandler: ', userId);
+    try{
+        const memories = await getForYouMemories(userId);
+        res.status(200).json({memories});
+    }catch(err){
+        console.error('Error getting for you memories: ', err);
+        res.status(500).json({message: err.message});
+    }
+}
+
+export {createMemoryHandler, getAllMemoriesHandler, getAllMemoriesByUserIdHandler, updateMemoryHandler, deleteMemoryHandler,  getExploreMemoriesHandler, getForYouMemoriesHandler};
