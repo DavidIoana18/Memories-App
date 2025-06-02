@@ -9,6 +9,7 @@ import AuthForm from './pages/AuthForm/AuthForm.js';
 import Home from './pages/Home/Home.js';
 import Memories from './components/Memories.js';
 import Profile from './pages/Profile.js';
+import Feed from './pages/Feed.js';
 
 function SessionHandler() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ function App() {
                       <Route path='/auth/login' element={<AuthForm />} />
                       <Route path='/memories/user/:userId' element={<Memories />} />
                       <Route path='/profile/:userId' element={<Profile />} />
+                      <Route path='/feed' element={<Feed />} />
                   </Routes>
               </main>
               <Footer />
